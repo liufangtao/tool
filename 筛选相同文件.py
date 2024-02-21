@@ -53,23 +53,61 @@
 #             
 import os
 import shutil
+from tqdm import tqdm
+
+# data1_path = r'/1T/liufangtao/ultralytics/runs/detect/baoming_glass_result' #
+# data2_path = r'/1T/liufangtao/datas/galss_baoming/cut/mangkongaodian/out0'
+# data3_path = r'/1T/liufangtao/datas/galss_baoming/cut/mangkongaodian/out1'
+
+# file1_list = os.listdir(data1_path)
+# file2_list = os.listdir(data2_path)
+
+# test_list = []
+# for file1 in tqdm(file1_list):
+#     a = file1[:-6]
+#     for file2 in file2_list:
+#         b = file2[:-6]
+#         if a==b:#and file2 != file1
+#             shutil.copy(os.path.join(data2_path, file2), os.path.join(data3_path, file2))
+
+import os
+import shutil
+
+def compare_and_copy_files(source_directory1, source_directory2):
+    # 获取两个源目录中的文件列表
+    files1 = os.listdir(source_directory1)
+    files2 = os.listdir(source_directory2)
+
+    # 创建目标目录（如果不存在）
+    # os.makedirs(destination_directory, exist_ok=True)
+
+    # 比较文件并拷贝
+    for file1 in tqdm(files1):
+        for file2 in files2:
+            # if file1 == file2:
+            #     # 如果文件名相同，则跳过，不做任何操作
+            #     continue
+            if file1[:-6] == file2[:-6]:
+                # 如果文件名部分相同，且文件2中不存在相同的文件，拷贝到目标目录
+                source_path = os.path.join(source_directory1, file1)
+                destination_path = os.path.join(source_directory2, file1)
+                if not os.path.exists(destination_path):
+                    shutil.copy(source_path, destination_path)
+
+if __name__ == "__main__":
+    # 源目录1包含要比较的文件
+    source_directory1 = '/1T/liufangtao/datas/galss_baoming/cut/aodian/C/out1'
+
+    # 源目录2包含要比较的文件
+    source_directory2 = '/1T/liufangtao/datas/galss_baoming/cut/aodian/C/out2'
+
+    # 目标目录是拷贝后的文件将要存储的位置
+    # destination_directory = 'path_to_destination_directory'
+
+    # 执行比较和拷贝操作
+    compare_and_copy_files(source_directory1, source_directory2)
 
 
-data1_path = r'E:\\windows_v1.8.0\\lungu-lg1-lg2\\JPEGImages'
-file1_list = os.listdir(data1_path)
+    
 
-test_list = []
-for file in file1_list:
-    a = file.split('.')
-    test_list.append(a[0])
 
-data2_path = r'E:\\windows_v1.8.0\\lungu-pre'
-file2_list = os.listdir(data2_path)
-
-for i in file2_list:
-    num = (i.split('.'))[0]
-    if num in test_list:
-        os.remove(os.path.join(data2_path,i))
-        print(num)
-    else:
-        continue

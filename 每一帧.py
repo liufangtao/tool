@@ -1,10 +1,10 @@
 import os
  
 import cv2
-import cv
+
  
-videos_src_path = 'E:\\liufangtao\\hat\\helmet\\'
-videos_save_path = 'E:\\liufangtao\\hat\\helmet\\1\\'
+videos_src_path = r'/1T/liufangtao/datas/fight/'
+videos_save_path = r'/1T/liufangtao/datas/fightimages/'
  
 videos = os.listdir(videos_src_path)
 videos = filter(lambda x: x.endswith('mp4'), videos)
@@ -19,18 +19,21 @@ for each_video in videos:
 	cap = cv2.VideoCapture(each_video_full_path)
 
 	c = 0
-	timeF = 100000
+	timeF = 100
 
 	frame_count = 1
 	success = True
 	while(success):
 		success, frame = cap.read()
 		print('Read a new frame: ', success)
+		if success == False:
+			break
+
 		if (c % timeF == 0):
 		# params = []
 		# params.append(cv.CV_IMWRITE_PXM_BINARY)
 		# params.append(1)
-		    cv2.imwrite(videos_save_path + each_video_name + "_%d.jpg" % int(c/100000), frame,[int( cv2.IMWRITE_JPEG_QUALITY), 95])
+		    cv2.imwrite(videos_save_path + each_video_name + "_%d.jpg" % int(c/100), frame,[int( cv2.IMWRITE_JPEG_QUALITY), 95])
 		    frame_count = frame_count + 1
 		c = c + 10000
 	cap.release()

@@ -27,11 +27,11 @@ for imagename in imlist:
 
 txtpath = 'E:\\liufangtao\\hat\\hatnews\\train\\labels'
 with open("test.txt", "r") as f:
-    datas = f.readlines()
+	datas = f.readlines()
     # print(data)
-    for i in datas:
-    	data = i.replace('\n','').split('.')[0]
-    	print(data)
-    	shutil.move(txtpath+'\\'+data+'.txt', newpath+ '\\'+data+'.txt')
+	for i in datas:
+		data = i.replace('\n','').split('.')[0]
+		print(data)
+		shutil.move(txtpath+'\\'+data+'.txt', newpath+ '\\'+data+'.txt')
 
 

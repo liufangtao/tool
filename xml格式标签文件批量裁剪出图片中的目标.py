@@ -1,33 +1,61 @@
-import cv2
-import xml.etree.ElementTree as ET
-import os 
 
-img_path = r'E:\liufangtao\home\tree1\images' #图片路径
-xml_path = r'E:\liufangtao\home\tree1\xmls' #标签路径
-obj_img_path = r'E:\liufangtao\home\tree1\img'   #目标裁剪图片存放路径
+from __future__ import division
+import os
+from PIL import Image
+import xml.dom.minidom
+import numpy as np
 
-for img_file in os.listdir(img_path):    #遍历图片文件夹
-    if img_file[-4:] in ['.png', '.jpg']:    #判断文件是否为图片格式
-        img_filename = os.path.join(img_path, img_file)  #将图片路径与图片名进行拼接
-        img_cv = cv2.imread(img_filename)  #读取图片
-        
-        img_name = (os.path.splitext(img_file)[0])  #分割出图片名，如“000.png” 图片名为“000”
-        xml_name = xml_path + '\\' + '%s.xml'%img_name  #利用标签路径、图片名、xml后缀拼接出完整的标签路径名
-        
-        if os.path.exists(xml_name):  #判断与图片同名的标签是否存在，因为图片不一定每张都打标
-            root = ET.parse(xml_name).getroot() #利用ET读取xml文件
-            count = 0 #目标框个数统计，防止目标文件覆盖
-            for obj in root.iter('object'):  #遍历所有目标框
-                name = obj.find('name').text   #获取目标框名称，即label名
-            
-                xmlbox = obj.find('bndbox')   #找到框目标
-                x0 = xmlbox.find('xmin').text  #将框目标的四个顶点坐标取出
-                y0 = xmlbox.find('ymin').text
-                x1 = xmlbox.find('xmax').text
-                y1 = xmlbox.find('ymax').text
-                
-                obj_img = img_cv[int(y0):int(y1), int(x0):int(x1)]  #cv2裁剪出目标框中的图片
-                
-                cv2.imwrite(obj_img_path + '\\' + '%s_%s'%(img_name, count) + '.jpg', obj_img)  #保存裁剪图片
-                count += 1 #目标框统计值自增1
+ImgPath = '/1T/liufangtao/datas/glass/0731/out0/all_tile_650bat/all8_1_2_3_7_9/out/images/' 
+AnnoPath = '/1T/liufangtao/datas/glass/0731/out0/all_tile_650bat/all8_1_2_3_7_9/out/xmls/'#xml位置
+ProcessedPath = '/1T/liufangtao/datas/glass/0731/out0/all_tile_650bat/all8_1_2_3_7_9/out/corp/'#保存图片新地址
+labels_list=['Broken', 'Burr', 'Chip', 'Draw', 'Crack', 'Waterstains','dirty']
+imagelist = os.listdir(ImgPath)
+i = 1
+ 
+for image in imagelist:
+    image_pre, ext = os.path.splitext(image)
+    imgfile = ImgPath +  image
+    print(imgfile)
+    if not os.path.exists(AnnoPath + image_pre + '.xml'): continue
+    xmlfile = AnnoPath+  image_pre + '.xml'
+    DomTree = xml.dom.minidom.parse(xmlfile)
+    annotation = DomTree.documentElement
+    filenamelist = annotation.getElementsByTagName('filename')  # [<DOM Element: filename at 0x381f788>]
+    # filename = filenamelist[0].childNodes[0].data
+    objectlist = annotation.getElementsByTagName('object')
 
+    for objects in objectlist:
+        namelist = objects.getElementsByTagName('name')
+        objectname = namelist[0].childNodes[0].data
+        savepath = ProcessedPath + objectname
+        if objectname in labels_list:
+            if not os.path.exists(savepath):
+                os.makedirs(savepath)
+            bndbox = objects.getElementsByTagName('bndbox')
+            cropboxes = []
+            for box in bndbox:
+                x1_list = box.getElementsByTagName('xmin')
+                x1 = int(x1_list[0].childNodes[0].data)
+                y1_list = box.getElementsByTagName('ymin')
+                y1 = int(y1_list[0].childNodes[0].data)
+                x2_list = box.getElementsByTagName('xmax')
+                x2 = int(x2_list[0].childNodes[0].data)
+                y2_list = box.getElementsByTagName('ymax')
+                y2 = int(y2_list[0].childNodes[0].data)
+                w = x2 - x1
+                h = y2 - y1
+                obj = np.array([x1, y1, x2, y2])
+                shift = np.array([[1, 1, 1, 1]])
+                XYmatrix = np.tile(obj, (1, 1))
+                cropboxes = XYmatrix * shift
+                img = Image.open(imgfile)
+                img = img.convert("RGB")
+                for cropbox in cropboxes:
+                    cropedimg = img.crop(cropbox)
+                    cropedimg.save(savepath+'/' + image_pre + '_' + str(i) + '.jpg')
+                    i += 1                
+print(i)
+
+
+
+# python reader_infer.py --detector_dir D:\PaddleX\w\meter_det_inference_model --segmenter_dir D:\PaddleX\w\meter_seg_inference_model --image D:\PaddleX\w\4.jpg --save_dir D:\PaddleX\w\output --use_erode
